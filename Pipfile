@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 requests = "*"
 python-dotenv = "*"
+flask = "*"
+gunicorn = "*"
 
 [dev-packages]
 "flake8" = "*"
