@@ -9,6 +9,7 @@ dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
 load_dotenv(dotenv_path)
 
 app = Flask(__name__)
+print(os.getenv('USERNAME'))
 
 
 # Auth
