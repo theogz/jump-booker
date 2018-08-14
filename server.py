@@ -1,12 +1,12 @@
 from flask import Flask, request, Response
-import dotenv
+from dotenv import load_dotenv
 import os
 from functools import wraps
 # import requests
 
 # Environment variables
-dotenv_path: str = os.path.join(os.path.dirname(__file__), './.env')
-dotenv.load_dotenv(dotenv_path)
+dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
+load_dotenv(dotenv_path)
 
 app = Flask(__name__)
 
@@ -32,8 +32,7 @@ def requires_auth(f):
         auth = request.authorization
         if not auth or not check_auth(auth.username, auth.password):
             return authenticate()
-            return f(*args, **kwargs)
-
+        return f(*args, **kwargs)
     return decorated
 
 
