@@ -2,7 +2,6 @@ from flask import Flask, request, Response
 from dotenv import load_dotenv
 import os
 from functools import wraps
-# import requests
 
 # Environment variables
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
@@ -36,14 +35,14 @@ def requires_auth(f):
     return decorated
 
 
-@requires_auth
 @app.route('/')
+@requires_auth
 def main_page():
     return 'Hello world!'
 
 
-@requires_auth
 @app.route('/authorized')
+@requires_auth
 def success_page():
     return Response('Yay', 200)
 
