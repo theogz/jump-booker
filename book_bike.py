@@ -6,6 +6,7 @@ from time import sleep
 import pprint
 import json
 from custom_logger import logger
+from flask import Response
 
 # Environment variables.
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
@@ -23,15 +24,14 @@ ENV = os.getenv('ENV')
 MAX_ATTEMPTS = 30
 
 
-def get_coordinates():
+def get_coordinates(address):
     """
     Ask for current address, establish closest place interpreted.
     Return latitude/longitude.
     """
 
-    print('Please enter your current address:')
     g = geocoder.google(
-        f'{input()} San Francisco'
+        f'{address} San Francisco'
     )
     logger.info(
         f'Searching bikes around {g.address}'
@@ -68,7 +68,7 @@ def is_valid(bike):
     """
 
     return (
-        bike['ebike_battery_level'] >= 30 and
+        bike['ebike_battery_level'] >= 25 and
         bike['distance'] <= 400
     )
 
@@ -95,7 +95,7 @@ def find_best_bike(coordinates, attempt):
             return False
         logger.warn('No bikes found nearby yet.')
         attempt = attempt + 1
-        sleep(30)
+        sleep(3)
         return find_best_bike(coordinates, attempt)
 
     logger.info(
@@ -154,22 +154,18 @@ def cancel_rental():
     return False
 
 
-def main():
-    logger.error(get_coordinates.__doc__)
-    my_coordinates = get_coordinates()
+def schedule_booking(address):
+    my_coordinates = get_coordinates(address)
     candidate_bike = find_best_bike(coordinates=my_coordinates, attempt=1)
 
     if not candidate_bike:
-        return None
+        return Response(response="No match :(", status=404)
 
     if ENV != 'dev':
         book_bike(candidate_bike)
-        return
+        return Response(response="booked", status=200)
 
     logger.warn(
         f'Would have booked bike {candidate_bike["name"]} in production'
     )
-
-
-if __name__ == '__main__':
-    main()
+    return Response(response="Gotem", status=200)

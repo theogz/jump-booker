@@ -1,12 +1,15 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, render_template
 from dotenv import load_dotenv
 import os
 from functools import wraps
+from concurrent.futures import ThreadPoolExecutor
+import book_bike
 
 # Environment variables
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
 load_dotenv(dotenv_path)
 
+executor = ThreadPoolExecutor(max_workers=4)
 app = Flask(__name__)
 
 
@@ -36,15 +39,20 @@ def requires_auth(f):
 
 
 @app.route('/')
-@requires_auth
 def main_page():
-    return 'Hello world!'
+    return render_template('index.html')
 
 
 @app.route('/authorized')
 @requires_auth
 def success_page():
     return Response('Yay', 200)
+
+
+@app.route('/fetch_bike_from_address', methods=['POST'])
+def schedule_booking():
+    address = request.form['address']
+    return executor.submit(book_bike.schedule_booking(address))
 
 
 if __name__ == '__main__':
