@@ -8,6 +8,9 @@ requests = "*"
 python-dotenv = "*"
 flask = "*"
 gunicorn = "*"
+geocoder = "*"
+pytz = "*"
+bugsnag = "*"
 
 [dev-packages]
 "flake8" = "*"
