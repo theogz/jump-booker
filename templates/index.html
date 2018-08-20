@@ -4,7 +4,10 @@
 </title>
 <body>
     <form action="{{ url_for('schedule_booking') }}" method="post">
-        <input type="text" name="address">Enter address
-        <input type="submit">
+        Enter your current address:
+        <div>
+            <input type="text" name="address">
+            <input type="submit">
+        </div>
     </form>
 </body>

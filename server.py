@@ -49,10 +49,11 @@ def success_page():
     return Response('Yay', 200)
 
 
-@app.route('/fetch_bike_from_address', methods=['POST'])
+@app.route('/booking', methods=['POST'])
 def schedule_booking():
     address = request.form['address']
-    return executor.submit(book_bike.schedule_booking(address))
+    executor.submit(book_bike.schedule_booking(address))
+    return Response(response='Looking for bikes around..', status=200)
 
 
 if __name__ == '__main__':
