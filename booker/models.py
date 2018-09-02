@@ -13,18 +13,33 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
     bookings = db.relationship(
-        'BookingStatus', backref='requester', lazy=True)
+        'Booking', backref='requester', lazy=True)
 
     def __repr__(self):
         return f"User('{self.email}'')"
 
 
-class BookingStatus(db.Model):
+class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     requester_id = db.Column(
         db.Integer, db.ForeignKey('user.id'), nullable=False)
+    query = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow)
+    booking_status = db.relationship(
+        'BookingStatus',
+        backref='booking', lazy=True)
+
+    def __repr__(self):
+        return f"Booking({self.id}, {self.requester_id}, '{self.created_at})'"
+
+
+class BookingStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    booking_id = db.Column(
+        db.Integer, db.ForeignKey('booking.id'), nullable=False)
     complete = db.Column(db.Boolean, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"Booking({self.id}, {self.requester_id}, '{self.timestamp})'"
+        return f"Status({self.id}, {self.booking_id}, '{self.timestamp})'"
