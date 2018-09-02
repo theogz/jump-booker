@@ -24,19 +24,18 @@ ENV = os.getenv('ENV')
 MAX_ATTEMPTS = 30
 
 
-def get_coordinates(address):
+def get_coordinates(input_address):
     """
     Ask for current address, establish closest place interpreted.
     Return latitude/longitude.
     """
 
     g = geocoder.google(
-        f'{address} San Francisco'
+        f'{input_address} San Francisco'
     )
-    logger.info(
-        f'Searching bikes around {g.address}'
-    )
+
     return {
+        'human_address': g.address,
         'latitude': g.latlng[0],
         'longitude': g.latlng[1]
     }
@@ -156,6 +155,9 @@ def cancel_rental():
 
 def schedule_booking(address):
     my_coordinates = get_coordinates(address)
+    logger.info(
+        f'Searching bikes around {my_coordinates["human_address"]}')
+
     candidate_bike = find_best_bike(coordinates=my_coordinates, attempt=1)
 
     if not candidate_bike:

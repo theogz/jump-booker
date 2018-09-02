@@ -45,12 +45,16 @@ def requires_auth(f):
 
 @app.route('/', methods=['GET', 'POST'])
 def main_page():
-    address_form = AddressForm()
-    if address_form.validate_on_submit():
-        flash(f'Requesting bikes for: {address_form.address.data}', 'success')
-        executor.submit(book_bike.schedule_booking(address_form.address))
+    form = AddressForm()
+    if form.validate_on_submit():
+        flash(
+            'Searching bikes around '
+            f'{book_bike.get_coordinates(form.address.data)["human_address"]}'
+            '...',
+            'success')
+        executor.submit(book_bike.schedule_booking(form.address.data))
         return redirect(url_for('main_page'))
-    return render_template('index.html', form=address_form)
+    return render_template('index.html', form=form)
 
 
 @app.route('/authorized')
