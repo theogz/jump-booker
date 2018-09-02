@@ -1,5 +1,6 @@
 from flask import (
-    Flask, request, Response, render_template, redirect, url_for)
+    Flask, request, Response, render_template, redirect, url_for,
+    flash)
 from dotenv import load_dotenv
 import os
 from functools import wraps
@@ -42,28 +43,20 @@ def requires_auth(f):
     return decorated
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def main_page():
-    form = AddressForm()
-    return render_template('index.html', form=form)
+    address_form = AddressForm()
+    if address_form.validate_on_submit():
+        flash(f'Requesting bikes for: {address_form.address.data}', 'success')
+        executor.submit(book_bike.schedule_booking(address_form.address))
+        return redirect(url_for('main_page'))
+    return render_template('index.html', form=address_form)
 
 
 @app.route('/authorized')
 @requires_auth
 def success_page():
     return Response(response='Yay', status=200)
-
-
-@app.route('/booking', methods=['POST'])
-def schedule_booking():
-    address = AddressForm()
-    executor.submit(book_bike.schedule_booking(address))
-    return redirect(url_for('waiting'), code=302)
-
-
-@app.route('/waiting', methods=['GET'])
-def waiting():
-    return Response(response='Looking for bikes around..', status=200)
 
 
 if __name__ == '__main__':
