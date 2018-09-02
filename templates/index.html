@@ -1,13 +1,15 @@
 {% extends "layout.html" %}
 {%block content %}
-    <form action="{{ url_for('schedule_booking') }}" method="post">
-        {{ form.hidden_tag() }}
-        Enter your current address:
-        <div>
-            {{ form.address }}
-        </div>
-        <div>
-            {{ form.submit(class="btn btn-outline-info")}}
-        </div>
-    </form>
+  <form action="" method="post">
+    {{ form.hidden_tag() }}
+    <fieldset class="form-group">
+      <legend class="border-bottom mb-4">Enter your current address:</legend>
+      <div class="form-group">
+        {{ form.address }}
+      </div>
+      <div class="form-group">
+        {{ form.submit(class="btn btn-outline-info")}}
+      </div>
+    </fieldset>
+  </form>
 {% endblock content %}
