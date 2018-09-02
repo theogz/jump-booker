@@ -28,7 +28,7 @@ class LoginForm(FlaskForm):
 
 
 class AddressForm(FlaskForm):
-    field = StringField(
+    address = StringField(
         'Current location',
         validators=[DataRequired()]
     )

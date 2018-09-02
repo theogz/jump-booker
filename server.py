@@ -1,4 +1,5 @@
-from flask import Flask, request, Response, render_template, redirect
+from flask import (
+    Flask, request, Response, render_template, redirect, url_for)
 from dotenv import load_dotenv
 import os
 from functools import wraps
@@ -43,7 +44,8 @@ def requires_auth(f):
 
 @app.route('/')
 def main_page():
-    return render_template('index.html')
+    form = AddressForm()
+    return render_template('index.html', form=form)
 
 
 @app.route('/authorized')
@@ -56,11 +58,11 @@ def success_page():
 def schedule_booking():
     address = AddressForm()
     executor.submit(book_bike.schedule_booking(address))
-    return redirect('/waiting', code=302)
+    return redirect(url_for('waiting'), code=302)
 
 
 @app.route('/waiting', methods=['GET'])
-def wait_status():
+def waiting():
     return Response(response='Looking for bikes around..', status=200)
 
 
