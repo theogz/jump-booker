@@ -1,28 +1,17 @@
+from booker import app
+from booker.book_bike import schedule_booking, get_coordinates
+from booker.forms import AddressForm, LoginForm, RegistrationForm
 from flask import (
-    Flask, request, Response, render_template, redirect, url_for,
+    request, Response, render_template, redirect, url_for,
     flash)
-from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
-import os
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
-import book_bike
-from forms import AddressForm, LoginForm, RegistrationForm
-
-# Environment variables
-dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
-load_dotenv(dotenv_path)
+import os
 
 executor = ThreadPoolExecutor(max_workers=4)
-SECRET_KEY = os.getenv('FLASK_SECRET')
-app = Flask(__name__)
-app.secret_key = SECRET_KEY
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'
-
-# db = SQLAlchemy(app)
 
 
-# Auth
+# Auth, remove this later with login logic
 def check_auth(username, password):
     return (
         username == os.getenv('USERNAME')
@@ -54,10 +43,10 @@ def main_page():
         # Todo: use the db to prevent multiple calls to google API
         flash(
             'Searching bikes around '
-            f'{book_bike.get_coordinates(form.address.data)["human_address"]}'
+            f'{get_coordinates(form.address.data)["human_address"]}'
             '...',
             'success')
-        executor.submit(book_bike.schedule_booking(form.address.data))
+        executor.submit(schedule_booking(form.address.data))
         return redirect(url_for('main_page'))
     return render_template('index.html', form=form)
 
@@ -92,7 +81,3 @@ def register():
 @requires_auth
 def success_page():
     return Response(response='Yay', status=200)
-
-
-if __name__ == '__main__':
-    app.run(host='localhost', port='5000')

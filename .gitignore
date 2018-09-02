@@ -3,3 +3,4 @@
 .mypy_cache
 Pipfile
 Pipfile.lock
+dev.db
