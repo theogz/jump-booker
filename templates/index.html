@@ -1,8 +1,5 @@
-<!doctype html>
-<title>
-    Jump bike booker
-</title>
-<body>
+{% extends "layout.html" %}
+{%block content %}
     <form action="{{ url_for('schedule_booking') }}" method="post">
         Enter your current address:
         <div>
@@ -10,4 +7,4 @@
             <input type="submit">
         </div>
     </form>
-</body>
+{% endblock content %}
