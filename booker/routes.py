@@ -1,10 +1,11 @@
-from booker import app
+from booker import app, db, bcrypt
+from flask_login import login_user, logout_user, current_user, login_required
+from booker.models import User, BookingStatus
 from booker.book_bike import schedule_booking, get_coordinates
 from booker.forms import AddressForm, LoginForm, RegistrationForm
 from flask import (
     request, Response, render_template, redirect, url_for,
     flash)
-from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
 import os
 
@@ -19,24 +20,8 @@ def check_auth(username, password):
     )
 
 
-def authenticate():
-    return Response(
-        'Invalid credentials :(', 401,
-        {'WWW-Authenticate': 'Basic realm="Login Required"'}
-    )
-
-
-def requires_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
-        return f(*args, **kwargs)
-    return decorated
-
-
 @app.route('/', methods=['GET', 'POST'])
+@login_required
 def main_page():
     form = AddressForm()
     if form.validate_on_submit():
@@ -53,31 +38,58 @@ def main_page():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main_page'))
     form = LoginForm()
     if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
         if (
-            form.email.data == 'teyo@teyo.com' and
-            form.password.data == 'password'
+            user and
+            bcrypt.
+            check_password_hash(user.password, form.password.data)
         ):
-            flash('You have been logged in!', 'success')
-            return redirect(url_for('home'))
-        else:
-            flash(
-                'Login Unsuccessful. Please check username and password',
-                'danger')
+            login_user(user, remember=form.remember.data)
+            next_page = request.args.get('next')
+            return (
+                redirect(next_page) if next_page
+                else (url_for('main_page')))
+        flash(
+            'Login Unsuccessful. Please check username and password',
+            'danger')
     return render_template('login.html', title='Login', form=form)
 
 
-@app.route("/register", methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('main_page'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        flash(f'Account created for {form.username.data}!', 'success')
-        return redirect(url_for('main_page'))
+        hashed_pw = (
+            bcrypt
+            .generate_password_hash(form.password.data).decode('utf-8'))
+        user = User(email=form.email.data, password=hashed_pw)
+        db.session.add(user)
+        db.session.commit()
+        flash(f'Account created.', 'success')
+        return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
 
+@app.route('/account')
+@login_required
+def account():
+    return render_template('account.html')
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('main_page'))
+
+
 @app.route('/authorized')
-@requires_auth
+@login_required
 def success_page():
+    # Edit this later to generate auth tokens per user
     return Response(response='Yay', status=200)
