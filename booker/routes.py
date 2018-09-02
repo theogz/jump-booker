@@ -7,17 +7,8 @@ from flask import (
     request, Response, render_template, redirect, url_for,
     flash)
 from concurrent.futures import ThreadPoolExecutor
-import os
 
 executor = ThreadPoolExecutor(max_workers=4)
-
-
-# Auth, remove this later with login logic
-def check_auth(username, password):
-    return (
-        username == os.getenv('USERNAME')
-        and password == os.getenv('PASSWORD')
-    )
 
 
 @app.route('/', methods=['GET', 'POST'])
