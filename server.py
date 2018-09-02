@@ -1,16 +1,19 @@
-from flask import Flask, request, Response, render_template
+from flask import Flask, request, Response, render_template, redirect
 from dotenv import load_dotenv
 import os
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
 import book_bike
+from forms import AddressForm
 
 # Environment variables
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
 load_dotenv(dotenv_path)
 
 executor = ThreadPoolExecutor(max_workers=4)
+SECRET_KEY = os.getenv('FLASK_SECRET')
 app = Flask(__name__)
+app.secret_key = SECRET_KEY
 
 
 # Auth
@@ -46,13 +49,18 @@ def main_page():
 @app.route('/authorized')
 @requires_auth
 def success_page():
-    return Response('Yay', 200)
+    return Response(response='Yay', status=200)
 
 
 @app.route('/booking', methods=['POST'])
 def schedule_booking():
-    address = request.form['address']
+    address = AddressForm()
     executor.submit(book_bike.schedule_booking(address))
+    return redirect('/waiting', code=302)
+
+
+@app.route('/waiting', methods=['GET'])
+def wait_status():
     return Response(response='Looking for bikes around..', status=200)
 
 
