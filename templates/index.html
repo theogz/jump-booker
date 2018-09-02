@@ -1,10 +1,13 @@
 {% extends "layout.html" %}
 {%block content %}
     <form action="{{ url_for('schedule_booking') }}" method="post">
+        {{ form.hidden_tag() }}
         Enter your current address:
         <div>
-            <input type="text" name="address">
-            <input type="submit">
+            {{ form.address }}
+        </div>
+        <div>
+            {{ form.submit(class="btn btn-outline-info")}}
         </div>
     </form>
 {% endblock content %}
