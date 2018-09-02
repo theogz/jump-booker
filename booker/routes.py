@@ -2,7 +2,8 @@ from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
 from booker.models import User, BookingStatus
 from booker.book_bike import schedule_booking, get_coordinates
-from booker.forms import AddressForm, LoginForm, RegistrationForm
+from booker.forms import (
+    AddressForm, LoginForm, RegistrationForm, UpdateAccountForm)
 from flask import (
     request, Response, render_template, redirect, url_for,
     flash)
@@ -59,7 +60,9 @@ def register():
         hashed_pw = (
             bcrypt
             .generate_password_hash(form.password.data).decode('utf-8'))
-        user = User(email=form.email.data, password=hashed_pw)
+        user = User(
+            email=form.email.data, username=form.username.data,
+            password=hashed_pw)
         db.session.add(user)
         db.session.commit()
         flash(f'Account created.', 'success')
@@ -67,10 +70,21 @@ def register():
     return render_template('register.html', title='Register', form=form)
 
 
-@app.route('/account')
+@app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
-    return render_template('account.html')
+    form = UpdateAccountForm()
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        flash('Your account has been updated!', 'success')
+        return redirect(url_for('account'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    return render_template(
+        'account.html', title='Account', form=form)
 
 
 @app.route('/logout')
