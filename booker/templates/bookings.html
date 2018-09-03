@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block content %}
+  {% for booking in bookings.items %}
+      <article class="media content-section">
+        <div class="media-body">
+          <div class="article-metadata">
+            <small class="text-muted">{{ booking.created_at.strftime('%e %b %Y %H:%M %p UTC') }}</small>
+          </div>
+          <p class="article-title">{{ booking.human_readable_address }}</p>
+          <p class="article-content">Status: {{ booking.status }}</p>
+        </div>
+      </article>
+  {% endfor %}
+{% endblock content %}
