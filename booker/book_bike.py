@@ -9,7 +9,7 @@ from custom_logger import logger
 from flask import Response
 from flask_login import current_user
 from booker import db
-from booker.models import Booking
+from booker.models import Bookings
 
 # Environment variables.
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
@@ -31,7 +31,7 @@ def create_booking(raw_query):
     g = geocoder.google(
         f'{raw_query} San Francisco'
     )
-    booking = Booking(
+    booking = Bookings(
         requester=current_user,
         query=raw_query,
         human_readable_address=g.address,

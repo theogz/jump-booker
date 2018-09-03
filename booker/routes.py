@@ -1,6 +1,6 @@
 from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
-from booker.models import User
+from booker.models import Users
 from booker.book_bike import create_booking
 from booker.init_db import remake_db
 from booker.forms import (
@@ -24,7 +24,7 @@ def main_page():
             f'{booking.human_readable_address}'
             '...',
             'success')
-        # executor.submit(BookingHandler(booking.id, form.address.data))
+        # executor.submit(some_function_to_do_everything)
         return redirect(url_for('main_page'))
     return render_template('index.html', form=form)
 
@@ -35,7 +35,7 @@ def login():
         return redirect(url_for('main_page'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        user = Users.query.filter_by(email=form.email.data).first()
         if (
             user and
             bcrypt.
@@ -61,7 +61,7 @@ def register():
         hashed_pw = (
             bcrypt
             .generate_password_hash(form.password.data).decode('utf-8'))
-        user = User(
+        user = Users(
             email=form.email.data, username=form.username.data,
             password=hashed_pw)
         db.session.add(user)

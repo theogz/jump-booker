@@ -1,7 +1,8 @@
 from booker import db, bcrypt
-from booker.models import User
+from booker.models import Users
 import os
 from dotenv import load_dotenv
+from custom_logger import logger
 
 # Environment variables.
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
@@ -11,8 +12,7 @@ load_dotenv(dotenv_path)
 def remake_db():
     db.drop_all()
     db.create_all()
-    print('OK')
-    first_admin = User(
+    first_admin = Users(
         username='admin',
         email='a@b.com',
         password=(
@@ -21,4 +21,4 @@ def remake_db():
         admin=True)
     db.session.add(first_admin)
     db.session.commit()
-    print(first_admin.id)
+    logger.info('Succesfully recreated the database.')
