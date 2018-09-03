@@ -7,6 +7,8 @@ import pprint
 import json
 from custom_logger import logger
 from flask import Response
+from booker import db
+from booker.models import Booking
 
 # Environment variables.
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
@@ -24,21 +26,34 @@ ENV = os.getenv('ENV')
 MAX_ATTEMPTS = 30
 
 
-def get_coordinates(input_address):
-    """
-    Ask for current address, establish closest place interpreted.
-    Return latitude/longitude.
-    """
+class BookingHandler(object):
+    def __init__(self, id, raw_query):
+        g = geocoder.google(
+            f'{raw_query} San Francisco'
+        )
+        booking = Booking.query.get(id)
+        booking.latitude = g.latlng[0]
+        booking.longitude = g.latlng[1]
+        booking.human_readable_address = g.address
+        logger.info(booking)
+        db.session.commit()
 
-    g = geocoder.google(
-        f'{input_address} San Francisco'
-    )
+    def list_closest_bikes(self):
+        r = requests.get(
+            f'{BASE_URL}/bikes.json?'
+            'per_page=10&sort=distance_asc'
+            f'&latitude={self.latitude}'
+            f'&longitude={self.longitude}',
+            headers=HEADERS)
 
-    return {
-        'human_address': g.address,
-        'latitude': g.latlng[0],
-        'longitude': g.latlng[1]
-    }
+        if r.status_code < 400 and r.status_code >= 200:
+            return r.json().get('items')
+
+        logger.error(
+            f'Request did not go through (code {r.status_code}):\n'
+            f'{r.text}'
+        )
+        return None
 
 
 def list_closest_bikes(coordinates):

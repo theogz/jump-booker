@@ -13,11 +13,12 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
+    admin = db.Column(db.Boolean, nullable=False, default=False)
     bookings = db.relationship(
         'Booking', backref='requester', lazy=True)
 
     def __repr__(self):
-        return f"User('{self.email}'')"
+        return f"User('{self.email}')"
 
 
 class Booking(db.Model):
@@ -25,22 +26,29 @@ class Booking(db.Model):
     requester_id = db.Column(
         db.Integer, db.ForeignKey('user.id'), nullable=False)
     query = db.Column(db.String(100), nullable=False)
+    human_readable_address = db.Column(db.String(300))
+    latitude = db.Column(db.Float(precision=5))
+    longitude = db.Column(db.Float(precision=5))
     created_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow)
-    booking_status = db.relationship(
-        'BookingStatus',
-        backref='booking', lazy=True)
+    status = db.Column(db.String(50), nullable=False, default='pending')
+    # booking_status = db.relationship(
+    #     'BookingStatus',
+    #     backref='booking', lazy=True)
 
     def __repr__(self):
-        return f"Booking({self.id}, {self.requester_id}, '{self.created_at})'"
+        return (
+            f"Booking({self.id}, {self.requester_id}, '{self.created_at}',"
+            f"'{self.query}')")
 
 
-class BookingStatus(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    booking_id = db.Column(
-        db.Integer, db.ForeignKey('booking.id'), nullable=False)
-    complete = db.Column(db.Boolean, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+# class BookingStatus(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     booking_id = db.Column(
+#         db.Integer, db.ForeignKey('booking.id'), nullable=False)
+#     complete = db.Column(db.Boolean, nullable=False)
+#     timestamp = db.Column(
+#         db.DateTime, nullable=False, default=datetime.utcnow)
 
-    def __repr__(self):
-        return f"Status({self.id}, {self.booking_id}, '{self.timestamp})'"
+#     def __repr__(self):
+#         return f"Status({self.id}, {self.booking_id}, '{self.timestamp})'"
