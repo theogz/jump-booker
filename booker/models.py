@@ -23,7 +23,7 @@ class Users(db.Model, UserMixin):
 
 class Bookings(db.Model):
     """
-    Potential statuses should be pending/complete/timeout/error/cancelled
+    Potential statuses should be pending/completed/timeout/error/cancelled
     """
     id = db.Column(db.Integer, primary_key=True)
     requester_id = db.Column(

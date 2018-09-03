@@ -9,7 +9,7 @@
     </thead>
     <tbody>
       {% for booking in bookings.items %}
-      <tr class="table-{{ 'success' if booking.status == 'success' else 
+      <tr class="table-{{ 'success' if booking.status == 'completed' else
       'secondary' if booking.status == 'cancelled' else
       'danger' if booking.status == 'error' else
       'warning' if booking.status == 'timeout' else
