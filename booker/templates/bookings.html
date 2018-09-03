@@ -1,14 +1,25 @@
 {% extends "layout.html" %}
 {% block content %}
-  {% for booking in bookings.items %}
-      <article class="media content-section">
-        <div class="media-body">
-          <div class="article-metadata">
-            <small class="text-muted">{{ booking.created_at.strftime('%e %b %Y %H:%M %p UTC') }}</small>
-          </div>
-          <p class="article-title">{{ booking.human_readable_address }}</p>
-          <p class="article-content">Status: {{ booking.status }}</p>
-        </div>
-      </article>
-  {% endfor %}
+<div class="table-responsive">
+  <table class="table table-hover">
+    <thead class="thead-light">
+      <th scope="col">Date of request</th>
+      <th scope="col">Address</th>
+      <th scope="col">Status</th>
+    </thead>
+    <tbody>
+      {% for booking in bookings.items %}
+      <tr class="table-{{ 'success' if booking.status == 'success' else 
+      'secondary' if booking.status == 'cancelled' else
+      'danger' if booking.status == 'error' else
+      'warning' if booking.status == 'timeout' else
+      'default'}}">
+        <th scope="row">{{ booking.created_at.strftime('%e %b %Y %H:%M %p UTC') }}</th>
+        <td>{{ booking.human_readable_address }}</td>
+        <td>{{ booking.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock content %}
