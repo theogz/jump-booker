@@ -91,7 +91,7 @@ def account():
         'account.html', title='Account', form=form)
 
 
-@app.route('/user/<username>', methods=['GET'])
+@app.route('/bookings/<username>', methods=['GET'])
 @login_required
 def bookings(username):
     page = request.args.get('page', 1, type=int)
