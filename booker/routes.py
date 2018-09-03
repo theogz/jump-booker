@@ -1,7 +1,8 @@
 from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
-from booker.models import User, BookingStatus
-from booker.book_bike import schedule_booking, get_coordinates
+from booker.models import User, Booking
+from booker.book_bike import BookingHandler
+from booker.init_db import remake_db
 from booker.forms import (
     AddressForm, LoginForm, RegistrationForm, UpdateAccountForm)
 from flask import (
@@ -17,13 +18,19 @@ executor = ThreadPoolExecutor(max_workers=4)
 def main_page():
     form = AddressForm()
     if form.validate_on_submit():
-        # Todo: use the db to prevent multiple calls to google API
-        flash(
-            'Searching bikes around '
-            f'{get_coordinates(form.address.data)["human_address"]}'
-            '...',
-            'success')
-        executor.submit(schedule_booking(form.address.data))
+        booking = Booking(
+            query=form.address.data,
+            requester=current_user
+        )
+        db.session.add(booking)
+        db.session.commit()
+        # flash(
+        #     'Searching bikes around '
+        #     f'{get_coordinates(form.address.data)["human_address"]}'
+        #     '...',
+        #     'success')
+        # executor.submit(BookingHandler(booking.id, form.address.data))
+        BookingHandler(booking.id, form.address.data)
         return redirect(url_for('main_page'))
     return render_template('index.html', form=form)
 
@@ -65,6 +72,9 @@ def register():
             password=hashed_pw)
         db.session.add(user)
         db.session.commit()
+        if user.id == 1:
+            user.admin = True
+            db.session.commit()
         flash(f'Account created.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
@@ -98,3 +108,12 @@ def logout():
 def success_page():
     # Edit this later to generate auth tokens per user
     return Response(response='Yay', status=200)
+
+
+@app.route('/remake-db')
+@login_required
+def nuke_db():
+    if not current_user.admin:
+        return Response('Only for admins', 403)
+    remake_db()
+    return redirect(url_for('register'))
