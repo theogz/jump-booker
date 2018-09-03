@@ -1,7 +1,7 @@
 from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
-from booker.models import User, Booking
-from booker.book_bike import BookingHandler
+from booker.models import User
+from booker.book_bike import create_booking
 from booker.init_db import remake_db
 from booker.forms import (
     AddressForm, LoginForm, RegistrationForm, UpdateAccountForm)
@@ -18,19 +18,13 @@ executor = ThreadPoolExecutor(max_workers=4)
 def main_page():
     form = AddressForm()
     if form.validate_on_submit():
-        booking = Booking(
-            query=form.address.data,
-            requester=current_user
-        )
-        db.session.add(booking)
-        db.session.commit()
-        # flash(
-        #     'Searching bikes around '
-        #     f'{get_coordinates(form.address.data)["human_address"]}'
-        #     '...',
-        #     'success')
+        booking = create_booking(form.address.data)
+        flash(
+            'Searching bikes around '
+            f'{booking.human_readable_address}'
+            '...',
+            'success')
         # executor.submit(BookingHandler(booking.id, form.address.data))
-        BookingHandler(booking.id, form.address.data)
         return redirect(url_for('main_page'))
     return render_template('index.html', form=form)
 
