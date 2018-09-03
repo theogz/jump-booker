@@ -7,6 +7,7 @@ import pprint
 import json
 from custom_logger import logger
 from flask import Response
+from flask_login import current_user
 from booker import db
 from booker.models import Booking
 
@@ -26,34 +27,20 @@ ENV = os.getenv('ENV')
 MAX_ATTEMPTS = 30
 
 
-class BookingHandler(object):
-    def __init__(self, id, raw_query):
-        g = geocoder.google(
-            f'{raw_query} San Francisco'
-        )
-        booking = Booking.query.get(id)
-        booking.latitude = g.latlng[0]
-        booking.longitude = g.latlng[1]
-        booking.human_readable_address = g.address
-        logger.info(booking)
-        db.session.commit()
-
-    def list_closest_bikes(self):
-        r = requests.get(
-            f'{BASE_URL}/bikes.json?'
-            'per_page=10&sort=distance_asc'
-            f'&latitude={self.latitude}'
-            f'&longitude={self.longitude}',
-            headers=HEADERS)
-
-        if r.status_code < 400 and r.status_code >= 200:
-            return r.json().get('items')
-
-        logger.error(
-            f'Request did not go through (code {r.status_code}):\n'
-            f'{r.text}'
-        )
-        return None
+def create_booking(raw_query):
+    g = geocoder.google(
+        f'{raw_query} San Francisco'
+    )
+    booking = Booking(
+        requester=current_user,
+        query=raw_query,
+        human_readable_address=g.address,
+        latitude=g.latlng[0],
+        longitude=g.latlng[1]
+    )
+    db.session.add(booking)
+    db.session.commit()
+    return booking
 
 
 def list_closest_bikes(coordinates):
@@ -169,7 +156,9 @@ def cancel_rental():
 
 
 def schedule_booking(address):
-    my_coordinates = get_coordinates(address)
+    # my_coordinates = get_coordinates(address)
+    my_coordinates = {'latitude': 37.7816, 'longitude': -122.4116}
+
     logger.info(
         f'Searching bikes around {my_coordinates["human_address"]}')
 
