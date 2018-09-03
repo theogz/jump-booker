@@ -1,6 +1,6 @@
 from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
-from booker.models import Users
+from booker.models import Users, Bookings
 from booker.book_bike import create_booking
 from booker.init_db import remake_db
 from booker.forms import (
@@ -89,6 +89,18 @@ def account():
         form.email.data = current_user.email
     return render_template(
         'account.html', title='Account', form=form)
+
+
+@app.route('/user/<username>', methods=['GET'])
+@login_required
+def bookings(username):
+    page = request.args.get('page', 1, type=int)
+    user = db.session.query(Users).filter_by(username=username).first_or_404()
+    booking_list = (
+        db.session.query(Bookings).filter_by(requester=user)
+        .order_by(Bookings.created_at.desc())
+        .paginate(page=page, per_page=5))
+    return render_template('bookings.html', bookings=booking_list)
 
 
 @app.route('/logout')
