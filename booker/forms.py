@@ -52,6 +52,7 @@ class AddressForm(FlaskForm):
         'Current location',
         validators=[DataRequired()]
     )
+    auto_book = BooleanField('book automatically')
     submit = SubmitField('Schedule booker!')
 
 

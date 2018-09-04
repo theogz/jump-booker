@@ -33,10 +33,12 @@ class Bookings(db.Model):
     human_readable_address = db.Column(db.String(200))
     latitude = db.Column(db.Float(precision=5))
     longitude = db.Column(db.Float(precision=5))
+
     matched_bike_address = db.Column(db.String(200))
+    matched_bike_id = db.Column(db.String(10))
 
     status = db.Column(db.String(50), nullable=False, default='pending')
-
+    auto_book = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
