@@ -1,7 +1,7 @@
 from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
 from booker.models import Users, Bookings
-from booker.book_bike import create_booking
+from booker.book_bike import create_booking, schedule_trip
 from booker.init_db import remake_db
 from booker.forms import (
     AddressForm, LoginForm, RegistrationForm, UpdateAccountForm)
@@ -18,14 +18,29 @@ executor = ThreadPoolExecutor(max_workers=4)
 def main_page():
     form = AddressForm()
     if form.validate_on_submit():
-        booking = create_booking(form.address.data)
+        booking = create_booking(form.address.data, form.auto_book.data)
         flash(
             'Searching bikes around '
             f'{booking.human_readable_address}'
             '...',
-            'success')
-        # executor.submit(some_function_to_do_everything)
-        return redirect(url_for('main_page'))
+            'info')
+
+        res = schedule_trip(booking)
+
+        result_data = (
+            {
+                'message': (
+                    f'Found bike {booking.matched_bike_name} at '
+                    f'{booking.matched_bike_address}'),
+                'category': 'success'
+            } if res.status_code < 400
+            else ({
+                'message': 'No bike found',
+                'category': 'danger'
+                }))
+        flash(result_data['message'], result_data['category'])
+        # return redirect(url_for('main_page'))
+    form.address.data = ''  # Ugly form "reset".
     return render_template('index.html', form=form)
 
 
@@ -99,7 +114,7 @@ def bookings(username):
     booking_list = (
         db.session.query(Bookings).filter_by(requester=user)
         .order_by(Bookings.created_at.desc())
-        .paginate(page=page, per_page=5))
+        .paginate(page=page, per_page=10))
     return render_template('bookings.html', bookings=booking_list)
 
 
