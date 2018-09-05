@@ -39,7 +39,7 @@ def main_page():
                 'category': 'danger'
                 }))
         flash(result_data['message'], result_data['category'])
-        # return redirect(url_for('main_page'))
+        return redirect(url_for('main_page'))
     form.address.data = ''  # Ugly form "reset".
     return render_template('index.html', form=form)
 
