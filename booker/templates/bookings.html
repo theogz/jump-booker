@@ -2,9 +2,11 @@
 {% block content %}
 <div class="table-responsive">
   <table class="table table-hover">
+    <caption>Times are in PDT</caption>
     <thead class="thead-light">
       <th scope="col">Date of request</th>
-      <th scope="col">Address</th>
+      <th scope="col">Request address</th>
+      <th scope="col">Bike address</th>
       <th scope="col">Status</th>
     </thead>
     <tbody>
@@ -13,9 +15,11 @@
       'secondary' if booking.status == 'cancelled' else
       'danger' if booking.status == 'error' else
       'warning' if booking.status == 'timeout' else
+      'info' if booking.status == 'match found' else
       'default'}}">
-        <th scope="row">{{ booking.created_at.strftime('%e %b %Y %H:%M %p UTC') }}</th>
+        <th scope="row">{{ booking.created_at | datetimefilter }}</th>
         <td>{{ booking.human_readable_address }}</td>
+        <td>{{ booking.matched_bike_address if booking.matched_bike_address else '' }}</td>
         <td>{{ booking.status }}</td>
       </tr>
       {% endfor %}
