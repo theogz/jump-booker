@@ -137,14 +137,13 @@ def book_bike(bike):
     """
 
     try:
-        book_url = f'{BASE_URL}/{bike["id"]}/book_bike.json'
+        book_url = f'{BASE_URL}/bikes/{bike["id"]}/book_bike.json'
         logger.info(f'POST - {book_url}')
 
         r = requests.post(
             book_url,
             headers=HEADERS
         )
-        logger.info(f'{r.method} - {r.url}')
 
         if r.status_code >= 200 and r.status_code < 400:
             logger.info(f'Succesfully booked bike {bike["name"]}')
