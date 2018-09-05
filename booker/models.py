@@ -35,7 +35,7 @@ class Bookings(db.Model):
     longitude = db.Column(db.Float(precision=5))
 
     matched_bike_address = db.Column(db.String(200))
-    matched_bike_id = db.Column(db.String(10))
+    matched_bike_name = db.Column(db.String(10))
 
     status = db.Column(db.String(50), nullable=False, default='pending')
     auto_book = db.Column(db.Boolean, nullable=False, default=False)
