@@ -27,10 +27,11 @@ def remake_db():
         query='jump bikes',
         human_readable_address=(
             '2200 Jerrold Ave, San Francisco, CA 94124, USA'),
+        matched_bike_address='2218 Jerrold Ave, San Francisco, CA',
         latitude=37.7458634,
         longitude=-122.4021239,
         status='completed',
-        created_at=datetime.utcnow() - timedelta(minutes=132))
+        created_at=datetime.utcnow() - timedelta(days=370, minutes=1300))
     mock_booking_2 = Bookings(
         requester=first_admin,
         query='google hq',
