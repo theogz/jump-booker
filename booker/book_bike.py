@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 import geocoder
 from time import sleep
 import pprint
-import json
 from custom_logger import logger
 from flask import Response
 from flask_login import current_user
@@ -56,13 +55,18 @@ def create_booking(raw_query, auto_book):
 def list_closest_bikes(latitude, longitude):
     """ Fetches the 10 closest bikes of the provided coordinates """
 
-    r = requests.get(
+    list_url = (
         f'{BASE_URL}/bikes.json?'
         'per_page=10&sort=distance_asc'
         f'&latitude={latitude}'
-        f'&longitude={longitude}',
+        f'&longitude={longitude}')
+    logger.info(f'GET - {list_url}')
+
+    r = requests.get(
+        list_url,
         headers=HEADERS
     )
+
     if r.status_code < 400 and r.status_code >= 200:
         return r.json().get('items')
     logger.error(
@@ -133,16 +137,21 @@ def book_bike(bike):
     """
 
     try:
+        book_url = f'{BASE_URL}/{bike["id"]}/book_bike.json'
+        logger.info(f'POST - {book_url}')
+
         r = requests.post(
-            f'{BASE_URL}/{bike["id"]}/book_bike.json',
+            book_url,
             headers=HEADERS
         )
+        logger.info(f'{r.method} - {r.url}')
+
         if r.status_code >= 200 and r.status_code < 400:
             logger.info(f'Succesfully booked bike {bike["name"]}')
             return True
         else:
             logger.error(
-                f'{r.status_code} - {json.loads(r.text).get("error")}'
+                f'{r.status_code} - {r.text}'
             )
             return False
     except Exception as e:
@@ -154,8 +163,9 @@ def cancel_rental():
     """ Cancel the current active rental. """
 
     try:
+        cancel_url = f'{BASE_URL}/rentals/cancel.json'
         r = requests.delete(
-            f'{BASE_URL}/rentals/cancel.json',
+            cancel_url,
             headers=HEADERS
         )
         if r.status_code >= 200 and r.status_code < 400:
@@ -163,7 +173,7 @@ def cancel_rental():
             return True
         else:
             logger.error(
-                f'{r.status_code} - {json.loads(r.text).get("error")}'
+                f'{r.status_code} - {r.text}'
             )
             return False
     except Exception as e:
