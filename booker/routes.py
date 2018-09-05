@@ -1,7 +1,8 @@
 from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
-from booker.models import User, BookingStatus
-from booker.book_bike import schedule_booking, get_coordinates
+from booker.models import Users, Bookings
+from booker.book_bike import create_booking, schedule_trip
+from booker.init_db import remake_db
 from booker.forms import (
     AddressForm, LoginForm, RegistrationForm, UpdateAccountForm)
 from flask import (
@@ -17,14 +18,29 @@ executor = ThreadPoolExecutor(max_workers=4)
 def main_page():
     form = AddressForm()
     if form.validate_on_submit():
-        # Todo: use the db to prevent multiple calls to google API
+        booking = create_booking(form.address.data, form.auto_book.data)
         flash(
             'Searching bikes around '
-            f'{get_coordinates(form.address.data)["human_address"]}'
+            f'{booking.human_readable_address}'
             '...',
-            'success')
-        executor.submit(schedule_booking(form.address.data))
+            'info')
+
+        res = schedule_trip(booking)
+
+        result_data = (
+            {
+                'message': (
+                    f'Found bike {booking.matched_bike_name} at '
+                    f'{booking.matched_bike_address}'),
+                'category': 'success'
+            } if res.status_code < 400
+            else ({
+                'message': 'No bike found',
+                'category': 'danger'
+                }))
+        flash(result_data['message'], result_data['category'])
         return redirect(url_for('main_page'))
+    form.address.data = ''  # Ugly form "reset".
     return render_template('index.html', form=form)
 
 
@@ -34,7 +50,7 @@ def login():
         return redirect(url_for('main_page'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        user = Users.query.filter_by(email=form.email.data).first()
         if (
             user and
             bcrypt.
@@ -60,11 +76,14 @@ def register():
         hashed_pw = (
             bcrypt
             .generate_password_hash(form.password.data).decode('utf-8'))
-        user = User(
+        user = Users(
             email=form.email.data, username=form.username.data,
             password=hashed_pw)
         db.session.add(user)
         db.session.commit()
+        if user.id == 1:
+            user.admin = True
+            db.session.commit()
         flash(f'Account created.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
@@ -87,6 +106,18 @@ def account():
         'account.html', title='Account', form=form)
 
 
+@app.route('/bookings/<username>', methods=['GET'])
+@login_required
+def bookings(username):
+    page = request.args.get('page', 1, type=int)
+    user = db.session.query(Users).filter_by(username=username).first_or_404()
+    booking_list = (
+        db.session.query(Bookings).filter_by(requester=user)
+        .order_by(Bookings.created_at.desc())
+        .paginate(page=page, per_page=10))
+    return render_template('bookings.html', bookings=booking_list)
+
+
 @app.route('/logout')
 def logout():
     logout_user()
@@ -98,3 +129,12 @@ def logout():
 def success_page():
     # Edit this later to generate auth tokens per user
     return Response(response='Yay', status=200)
+
+
+@app.route('/remake-db')
+@login_required
+def nuke_db():
+    if not current_user.admin:
+        return Response('Only for admins', 403)
+    remake_db()
+    return redirect(url_for('register'))

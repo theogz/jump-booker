@@ -4,9 +4,11 @@ from dotenv import load_dotenv
 import geocoder
 from time import sleep
 import pprint
-import json
 from custom_logger import logger
 from flask import Response
+from flask_login import current_user
+from booker import db
+from booker.models import Bookings
 
 # Environment variables.
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
@@ -21,36 +23,50 @@ pp = pprint.PrettyPrinter(indent=4).pprint
 ENV = os.getenv('ENV')
 
 # We retry 30 times (aka 15 minutes).
-MAX_ATTEMPTS = 30
+MAX_ATTEMPTS = 3
 
 
-def get_coordinates(input_address):
-    """
-    Ask for current address, establish closest place interpreted.
-    Return latitude/longitude.
-    """
-
+def create_booking(raw_query, auto_book):
     g = geocoder.google(
-        f'{input_address} San Francisco'
+        f'{raw_query} San Francisco'
     )
 
-    return {
-        'human_address': g.address,
-        'latitude': g.latlng[0],
-        'longitude': g.latlng[1]
-    }
+    booking = Bookings(
+        requester=current_user,
+        query=raw_query,
+        auto_book=auto_book
+    )
+
+    if g.status == 'OVER_QUERY_LIMIT':
+        booking.status = 'error'
+        db.session.add(booking)
+        db.session.commit()
+        return booking
+
+    booking.human_readable_address = g.address
+    booking.latitude = g.latlng[0]
+    booking.longitude = g.latlng[1]
+
+    db.session.add(booking)
+    db.session.commit()
+    return booking
 
 
-def list_closest_bikes(coordinates):
+def list_closest_bikes(latitude, longitude):
     """ Fetches the 10 closest bikes of the provided coordinates """
 
-    r = requests.get(
+    list_url = (
         f'{BASE_URL}/bikes.json?'
         'per_page=10&sort=distance_asc'
-        f'&latitude={coordinates["latitude"]}'
-        f'&longitude={coordinates["longitude"]}',
+        f'&latitude={latitude}'
+        f'&longitude={longitude}')
+    logger.info(f'GET - {list_url}')
+
+    r = requests.get(
+        list_url,
         headers=HEADERS
     )
+
     if r.status_code < 400 and r.status_code >= 200:
         return r.json().get('items')
     logger.error(
@@ -72,14 +88,14 @@ def is_valid(bike):
     )
 
 
-def find_best_bike(coordinates, attempt):
+def find_best_bike(booking, attempt):
     """
     Try MAX_ATTEMPTS time (spaced by 30 seconds) to find a close match.
     Return False if eventually no match.
     Return the closest bike available otherwise.
     """
 
-    bike_list = list_closest_bikes(coordinates)
+    bike_list = list_closest_bikes(booking.latitude, booking.longitude)
     if bike_list is None:
         return None
 
@@ -91,11 +107,12 @@ def find_best_bike(coordinates, attempt):
     if not valid_bike_list:
         if attempt >= MAX_ATTEMPTS:
             logger.warn(f'No bikes found after {attempt} attempts')
+            booking.status = 'timeout'
+            db.session.commit()
             return False
         logger.warn('No bikes found nearby yet.')
-        attempt = attempt + 1
-        sleep(3)
-        return find_best_bike(coordinates, attempt)
+        sleep(2)
+        return find_best_bike(booking, attempt + 1)
 
     logger.info(
         f'Found {len(valid_bike_list)} bikes matching criteria, '
@@ -103,7 +120,12 @@ def find_best_bike(coordinates, attempt):
     )
 
     best_bike = min(valid_bike_list, key=lambda bike: bike['distance'])
-    logger.info(f'Closest bike located at {best_bike["address"]}. Booking...')
+    logger.info(f'Closest bike located at {best_bike["address"]}.')
+    booking.matched_bike_address = best_bike['address']
+    booking.matched_bike_name = best_bike['name']
+    booking.status = 'match found'
+
+    db.session.commit()
 
     return best_bike
 
@@ -115,16 +137,20 @@ def book_bike(bike):
     """
 
     try:
+        book_url = f'{BASE_URL}/bikes/{bike["id"]}/book_bike.json'
+        logger.info(f'POST - {book_url}')
+
         r = requests.post(
-            f'{BASE_URL}/{bike["id"]}/book_bike.json',
+            book_url,
             headers=HEADERS
         )
+
         if r.status_code >= 200 and r.status_code < 400:
             logger.info(f'Succesfully booked bike {bike["name"]}')
             return True
         else:
             logger.error(
-                f'{r.status_code} - {json.loads(r.text).get("error")}'
+                f'{r.status_code} - {r.text}'
             )
             return False
     except Exception as e:
@@ -136,8 +162,9 @@ def cancel_rental():
     """ Cancel the current active rental. """
 
     try:
+        cancel_url = f'{BASE_URL}/rentals/cancel.json'
         r = requests.delete(
-            f'{BASE_URL}/rentals/cancel.json',
+            cancel_url,
             headers=HEADERS
         )
         if r.status_code >= 200 and r.status_code < 400:
@@ -145,7 +172,7 @@ def cancel_rental():
             return True
         else:
             logger.error(
-                f'{r.status_code} - {json.loads(r.text).get("error")}'
+                f'{r.status_code} - {r.text}'
             )
             return False
     except Exception as e:
@@ -153,21 +180,27 @@ def cancel_rental():
     return False
 
 
-def schedule_booking(address):
-    my_coordinates = get_coordinates(address)
-    logger.info(
-        f'Searching bikes around {my_coordinates["human_address"]}')
+def schedule_trip(booking):
+    # Todo: handle auto-booking
+    if booking.status == 'error':
+        return Response(response='Error', status=429)
 
-    candidate_bike = find_best_bike(coordinates=my_coordinates, attempt=1)
+    logger.info(
+        f'Searching bikes around {booking.human_readable_address}')
+
+    candidate_bike = find_best_bike(booking, attempt=1)
 
     if not candidate_bike:
-        return Response(response="No match :(", status=404)
+        return Response(response='No bike around', status=404)
 
     if ENV != 'dev':
         book_bike(candidate_bike)
-        return Response(response="booked", status=200)
+        booking.status = 'completed'
+        db.session.commit()
+        return Response(response='Booked', status=200)
 
     logger.warn(
         f'Would have booked bike {candidate_bike["name"]} in production'
     )
-    return Response(response="Gotem", status=200)
+
+    return Response(response='Gotem', status=200)
