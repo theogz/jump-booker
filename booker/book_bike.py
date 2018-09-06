@@ -204,7 +204,7 @@ def schedule_trip(booking, sse):
             'address': booking.matched_bike_address,
             'category': 'success'
         },
-        channel='book-status')
+        type='book-status')
 
     logger.warn('SHOULD BE THERE')
     if ENV != 'dev':

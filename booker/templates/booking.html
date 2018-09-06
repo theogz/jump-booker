@@ -7,7 +7,7 @@
     {{ booking.matched_bike_address }}
 </div>
 <script>
-    var source = new EventSource("{{ url_for('sse.stream', channel='book-status') }}");
+    var source = new EventSource("{{ url_for('sse.stream') }}");
     function showalert(message, alerttype) {
 
         $('#js_alert_placeholder').append('<div id="alertdiv" class="alert ' + alerttype + '"><button type="button" class="close" data-dismiss="alert">&times;</button><span>' + message + '</span></div>')
