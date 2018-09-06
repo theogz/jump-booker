@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
+from flask_sse import sse
 from dotenv import load_dotenv
 import os
 import pytz
@@ -11,9 +12,12 @@ from datetime import datetime
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
 load_dotenv(dotenv_path)
 SECRET_KEY = os.getenv('FLASK_SECRET')
+REDIS_URL = os.getenv('REDIS_URL')
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+app.config['REDIS_URL'] = REDIS_URL
+app.register_blueprint(sse, url_prefix='/stream')
 app.templates_auto_reload = True
 
 
