@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-<div id = "js_alert_placeholder"></div>
+  <div id = "js_alert_placeholder"></div>
   <form action="" method="post">
     {{ form.hidden_tag() }}
     <fieldset class="form-group">
@@ -20,13 +20,13 @@
     var source = new EventSource("{{ url_for('sse.stream') }}");
     function showalert(message,alerttype) {
 
-    $('#js_alert_placeholder').append('<div id="alertdiv" class="alert ' +  alerttype + '"><a class="close" data-dismiss="alert">×</a><span>'+message+'</span></div>')
+    $('#js_alert_placeholder').append('<div id="alertdiv" class="alert ' +  alerttype + '"><button type="button" class="close" data-dismiss="alert">&times;</button><span>'+message+'</span></div>')
 
     setTimeout(function() {
       $("#alertdiv").remove();
     }, 10000);
     };
-    source.addEventListener('greeting', function(event) {
+    source.addEventListener('book-status', function(event) {
         var data = JSON.parse(event.data);
         console.log(data.address, data.category);
         showalert(data.address, data.category);

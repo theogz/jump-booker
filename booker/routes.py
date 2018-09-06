@@ -15,8 +15,14 @@ executor = ThreadPoolExecutor(max_workers=4)
 
 
 @app.route('/', methods=['GET', 'POST'])
+@app.route('/<booking_id>', methods=['GET', 'POST'])
 @login_required
-def main_page():
+def main_page(booking_id=None):
+    print(booking_id)
+    if booking_id:
+        booking = db.session.query(Bookings).get(booking_id)
+        print(booking)
+        schedule_trip(booking)
     form = AddressForm()
     if form.validate_on_submit():
 
@@ -36,8 +42,6 @@ def main_page():
             }))
         flash(init_data['message'], init_data['category'])
 
-        schedule_trip(booking)
-
         # result_data = (
         #     {
         #         'message': (
@@ -50,7 +54,8 @@ def main_page():
         #         'category': 'danger'
         #         }))
         # flash(result_data['message'], result_data['category'])
-        # return redirect(url_for('main_page'))
+        return redirect(url_for('main_page', booking_id=booking.id))
+
     form.address.data = ''  # Ugly form "reset".
     return render_template('index.html', form=form)
 

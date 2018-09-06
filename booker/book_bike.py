@@ -200,7 +200,7 @@ def schedule_trip(booking):
             'address': booking.matched_bike_address,
             'category': 'success'
         },
-        type='greeting')
+        type='book-status')
 
     if ENV != 'dev':
         book_bike(candidate_bike)
