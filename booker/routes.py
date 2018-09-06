@@ -1,6 +1,6 @@
 from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
-# from flask_sse import sse
+from flask_sse import sse
 from booker.models import Users, Bookings
 from booker.book_bike import create_booking, schedule_trip
 from booker.init_db import remake_db
@@ -11,53 +11,50 @@ from flask import (
     flash)
 from concurrent.futures import ThreadPoolExecutor
 
-executor = ThreadPoolExecutor(max_workers=4)
+with app.app_context():
+    executor = ThreadPoolExecutor(max_workers=4)
 
 
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/<booking_id>', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 @login_required
-def main_page(booking_id=None):
-    print(booking_id)
-    if booking_id:
-        booking = db.session.query(Bookings).get(booking_id)
-        print(booking)
-        schedule_trip(booking)
+def index():
     form = AddressForm()
-    if form.validate_on_submit():
-
-        booking = create_booking(form.address.data, form.auto_book.data)
-
-        init_data = (
-            {
-                'message': (
-                    'Searching bikes around '
-                    f'{booking.human_readable_address}'
-                    '...'),
-                'category': 'info'
-            } if booking.status == 'pending'
-            else ({
-                'message': 'Google address API limit exceeded',
-                'category': 'warning'
-            }))
-        flash(init_data['message'], init_data['category'])
-
-        # result_data = (
-        #     {
-        #         'message': (
-        #             f'Found bike {booking.matched_bike_name} at '
-        #             f'{booking.matched_bike_address}'),
-        #         'category': 'success'
-        #     } if res.status_code < 400
-        #     else ({
-        #         'message': 'No bike found',
-        #         'category': 'danger'
-        #         }))
-        # flash(result_data['message'], result_data['category'])
-        return redirect(url_for('main_page', booking_id=booking.id))
-
-    form.address.data = ''  # Ugly form "reset".
     return render_template('index.html', form=form)
+
+
+@app.route('/book', methods=['POST'])
+@login_required
+def book():
+    form = AddressForm()
+
+    if not form.validate_on_submit():
+        return Response('no', 403)
+
+    booking = create_booking(form.address.data, True)
+    executor.submit(schedule_trip, booking=booking, sse=sse)
+    flash('Test', 'info')
+    return redirect(url_for('booking_id', id=booking.id))
+
+
+@app.route('/booking/<id>', methods=['GET', 'PUT'])
+@login_required
+def booking_id(id):
+    booking = db.session.query(Bookings).get(id)
+    return render_template('booking.html', booking=booking)
+
+    # init_data = (
+    #     {
+    #         'message': (
+    #             'Searching bikes around '
+    #             f'{booking.human_readable_address}'
+    #             '...'),
+    #         'category': 'info'
+    #     } if booking.status == 'pending'
+    #     else ({
+    #         'message': 'Google address API limit exceeded',
+    #         'category': 'warning'
+    #     }))
+    # flash(init_data['message'], init_data['category'])
 
 
 @app.route('/login', methods=['GET', 'POST'])

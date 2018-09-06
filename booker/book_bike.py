@@ -7,7 +7,7 @@ import pprint
 from custom_logger import logger
 from flask import Response
 from flask_login import current_user
-from flask_sse import sse
+# from flask_sse import sse
 from booker import db
 from booker.models import Bookings
 
@@ -27,7 +27,7 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 MAX_ATTEMPTS = 3
 
 
-def create_booking(raw_query, auto_book):
+def create_booking(raw_query, auto_book=True):
     g = geocoder.google(
         f'{raw_query} San Francisco',
         key=GOOGLE_API_KEY
@@ -182,7 +182,7 @@ def cancel_rental():
     return False
 
 
-def schedule_trip(booking):
+def schedule_trip(booking, sse):
     # Todo: handle auto-booking
     if booking.status == 'error':
         return Response(response='Error', status=429)
@@ -195,13 +195,18 @@ def schedule_trip(booking):
     if not candidate_bike:
         return Response(response='No bike around', status=404)
 
+    logger.warn(booking.id)
+    logger.warn(booking.matched_bike_address)
+    sleep(1)
+
     sse.publish(
         {
             'address': booking.matched_bike_address,
             'category': 'success'
         },
-        type='book-status')
+        channel='book-status')
 
+    logger.warn('SHOULD BE THERE')
     if ENV != 'dev':
         book_bike(candidate_bike)
         booking.status = 'completed'

@@ -1,38 +1,18 @@
 {% extends "layout.html" %}
 {% block content %}
-  <div id = "js_alert_placeholder"></div>
-  <form action="" method="post">
+  <form action="/book" method="post">
     {{ form.hidden_tag() }}
     <fieldset class="form-group">
       <legend class="border-bottom mb-4">Enter your current address:</legend>
       <div class="form-group">
         {{ form.address }}
-        <div class="form-check">
+        <!-- <div class="form-check">
           {{ form.auto_book(class="form-check-input") }} {{ form.auto_book.label(class="form-check-label") }}
-        </div>
+        </div> -->
       </div>
       <div class="form-group">
         {{ form.submit(class="btn btn-outline-info")}}
       </div>
     </fieldset>
   </form>
-  <script>
-    var source = new EventSource("{{ url_for('sse.stream') }}");
-    function showalert(message,alerttype) {
-
-    $('#js_alert_placeholder').append('<div id="alertdiv" class="alert ' +  alerttype + '"><button type="button" class="close" data-dismiss="alert">&times;</button><span>'+message+'</span></div>')
-
-    setTimeout(function() {
-      $("#alertdiv").remove();
-    }, 10000);
-    };
-    source.addEventListener('book-status', function(event) {
-        var data = JSON.parse(event.data);
-        console.log(data.address, data.category);
-        showalert(data.address, data.category);
-    }, false);
-    source.addEventListener('error', function(event) {
-        console.log("Failed to connect to event stream. Is Redis running?");
-    }, false);
-  </script>
 {% endblock content %}
