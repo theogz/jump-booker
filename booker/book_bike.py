@@ -7,6 +7,7 @@ import pprint
 from custom_logger import logger
 from flask import Response
 from flask_login import current_user
+from flask_sse import sse
 from booker import db
 from booker.models import Bookings
 
@@ -21,14 +22,15 @@ HEADERS = {
 }
 pp = pprint.PrettyPrinter(indent=4).pprint
 ENV = os.getenv('ENV')
-
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 # We retry 30 times (aka 15 minutes).
 MAX_ATTEMPTS = 3
 
 
 def create_booking(raw_query, auto_book):
     g = geocoder.google(
-        f'{raw_query} San Francisco'
+        f'{raw_query} San Francisco',
+        key=GOOGLE_API_KEY
     )
 
     booking = Bookings(
@@ -192,6 +194,13 @@ def schedule_trip(booking):
 
     if not candidate_bike:
         return Response(response='No bike around', status=404)
+
+    sse.publish(
+        {
+            'address': booking.matched_bike_address,
+            'category': 'success'
+        },
+        type='greeting')
 
     if ENV != 'dev':
         book_bike(candidate_bike)
