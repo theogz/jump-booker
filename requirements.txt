@@ -12,6 +12,7 @@ Flask==1.0.2
 Flask-Bcrypt==0.7.1
 Flask-Login==0.4.1
 Flask-SQLAlchemy==2.3.2
+Flask-SSE==0.2.1
 Flask-WTF==0.14.2
 future==0.16.0
 geocoder==1.38.1
@@ -28,6 +29,7 @@ pyflakes==1.6.0
 python-dotenv==0.9.1
 pytz==2018.5
 ratelim==0.1.6
+redis==2.10.6
 requests==2.19.1
 six==1.11.0
 SQLAlchemy==1.2.11
