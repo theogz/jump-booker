@@ -199,7 +199,7 @@ def schedule_trip(booking):
     sleep(1)
     logger.warn('PRE PUBLISHING')
 
-    socket.emit('my test event', {'data': 123})
+    socket.emit('my test event', {'data': booking.matched_bike_address})
 
     logger.info('POST PUBLISHING')
 

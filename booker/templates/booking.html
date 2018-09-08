@@ -13,7 +13,7 @@
     socket.emit('my event', {data: 'wub wub'});
   });
   socket.on('my test event', function (msg) {
-      console.log(msg.data);
+      console.log(`EVENT WAS RECEIVED: ${msg.data}!!!!!!!!!!`);
   });
   // function showalert(message, alerttype) {
 
