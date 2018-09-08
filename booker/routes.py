@@ -1,6 +1,5 @@
 from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
-from flask_sse import sse
 from booker.models import Users, Bookings
 from booker.book_bike import create_booking, schedule_trip
 from booker.init_db import remake_db
@@ -9,10 +8,7 @@ from booker.forms import (
 from flask import (
     request, Response, render_template, redirect, url_for,
     flash)
-from concurrent.futures import ThreadPoolExecutor
-
-with app.app_context():
-    executor = ThreadPoolExecutor(max_workers=4)
+import eventlet
 
 
 @app.route('/', methods=['GET'])
@@ -31,7 +27,7 @@ def book():
         return Response('no', 403)
 
     booking = create_booking(form.address.data, True)
-    executor.submit(schedule_trip, booking=booking, sse=sse)
+    eventlet.spawn(schedule_trip, booking=booking)
     flash('Test', 'info')
     return redirect(url_for('booking_id', id=booking.id))
 
@@ -60,7 +56,7 @@ def booking_id(id):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main_page'))
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.filter_by(email=form.email.data).first()
@@ -73,7 +69,7 @@ def login():
             next_page = request.args.get('next')
             return (
                 redirect(next_page) if next_page
-                else (url_for('main_page')))
+                else (url_for('index')))
         flash(
             'Login Unsuccessful. Please check username and password',
             'danger')
@@ -83,7 +79,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('main_page'))
+        return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_pw = (
@@ -134,7 +130,7 @@ def bookings(username):
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('main_page'))
+    return redirect(url_for('index'))
 
 
 @app.route('/authorized')
