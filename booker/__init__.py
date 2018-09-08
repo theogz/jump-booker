@@ -1,5 +1,4 @@
 import eventlet
-eventlet.monkey_patch()
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -9,6 +8,7 @@ from dotenv import load_dotenv
 import os
 import pytz
 from datetime import datetime
+eventlet.monkey_patch()
 
 # Environment variables
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
