@@ -1,35 +1,18 @@
 {% extends "layout.html" %}
 {% block content %}
 <div id="js_alert_placeholder"></div>
-<div>
-  {{ booking.id }}
-  {{ booking.human_readable_address }}
-  {{ booking.matched_bike_address }}
-</div>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
 <script>
   var socket = io.connect('http://' + document.domain + ':' + location.port);
   socket.on('connect', function () {
-    socket.emit('my event', {data: 'wub wub'});
+  socket.emit('my event', {data: 'wub wub'});
   });
-  socket.on('my test event', function (msg) {
-      console.log(`EVENT WAS RECEIVED: ${msg.data}!!!!!!!!!!`);
+  function showalert(message, alerttype) {
+    $('#js_alert_placeholder').append('<div id="alertdiv" class="alert alert-' + alerttype + '"><button type="button" class="close" data-dismiss="alert">&times;</button><span>' + message + '</span></div>')
+  };
+  socket.on('booked', function (data) {
+    console.log(`EVENT WAS RECEIVED: ${data.matched_bike_address}!!!!!!!!!!`);
+    showalert(`Found bike (${data.bike_name}) at ${data.address}`, 'success')
   });
-  // function showalert(message, alerttype) {
-
-  //     $('#js_alert_placeholder').append('<div id="alertdiv" class="alert ' + alerttype + '"><button type="button" class="close" data-dismiss="alert">&times;</button><span>' + message + '</span></div>')
-
-  //     setTimeout(function () {
-  //         $("#alertdiv").remove();
-  //     }, 10000);
-  // };
-  // source.addEventListener('book-status', function (event) {
-  //     var data = JSON.parse(event.data);
-  //     console.log(data.address, data.category);
-  //     showalert(data.address, data.category);
-  // }, false);
-  // source.addEventListener('error', function (event) {
-  //     console.log("Failed to connect to event stream. Is Redis running?");
-  // }, false);
 </script>
 {% endblock content %}

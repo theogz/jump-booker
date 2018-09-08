@@ -27,8 +27,23 @@ def book():
         return Response('no', 403)
 
     booking = create_booking(form.address.data, True)
+
     eventlet.spawn(schedule_trip, booking=booking)
-    flash('Test', 'info')
+
+    init_data = (
+        {
+            'message': (
+                'Searching bikes around '
+                f'{booking.human_readable_address}'
+                '...'),
+            'category': 'info'
+        } if booking.status == 'pending'
+        else ({
+            'message': 'Google address API limit exceeded',
+            'category': 'warning'
+        }))
+    flash(init_data['message'], init_data['category'])
+
     return redirect(url_for('booking_id', id=booking.id))
 
 
@@ -37,20 +52,6 @@ def book():
 def booking_id(id):
     booking = db.session.query(Bookings).get(id)
     return render_template('booking.html', booking=booking)
-
-    # init_data = (
-    #     {
-    #         'message': (
-    #             'Searching bikes around '
-    #             f'{booking.human_readable_address}'
-    #             '...'),
-    #         'category': 'info'
-    #     } if booking.status == 'pending'
-    #     else ({
-    #         'message': 'Google address API limit exceeded',
-    #         'category': 'warning'
-    #     }))
-    # flash(init_data['message'], init_data['category'])
 
 
 @app.route('/login', methods=['GET', 'POST'])
