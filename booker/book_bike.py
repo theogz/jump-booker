@@ -7,8 +7,7 @@ import pprint
 from custom_logger import logger
 from flask import Response
 from flask_login import current_user
-# from flask_sse import sse
-from booker import db
+from booker import db, socket
 from booker.models import Bookings
 
 # Environment variables.
@@ -182,7 +181,7 @@ def cancel_rental():
     return False
 
 
-def schedule_trip(booking, sse):
+def schedule_trip(booking):
     # Todo: handle auto-booking
     if booking.status == 'error':
         return Response(response='Error', status=429)
@@ -198,15 +197,12 @@ def schedule_trip(booking, sse):
     logger.warn(booking.id)
     logger.warn(booking.matched_bike_address)
     sleep(1)
+    logger.warn('PRE PUBLISHING')
 
-    sse.publish(
-        {
-            'address': booking.matched_bike_address,
-            'category': 'success'
-        },
-        type='book-status')
+    socket.emit('my test event', {'data': 123})
 
-    logger.warn('SHOULD BE THERE')
+    logger.info('POST PUBLISHING')
+
     if ENV != 'dev':
         book_bike(candidate_bike)
         booking.status = 'completed'
