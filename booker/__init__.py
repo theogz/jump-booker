@@ -17,6 +17,7 @@ SECRET_KEY = os.getenv('FLASK_SECRET')
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.templates_auto_reload = True
 
 
