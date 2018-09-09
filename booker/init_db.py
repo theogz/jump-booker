@@ -30,7 +30,7 @@ def remake_db():
         matched_bike_address='2218 Jerrold Ave, San Francisco, CA',
         latitude=37.7458634,
         longitude=-122.4021239,
-        status='completed',
+        status='booked',
         created_at=datetime.utcnow() - timedelta(days=370, minutes=1300))
     mock_booking_2 = Bookings(
         requester=first_admin,
