@@ -194,16 +194,12 @@ def schedule_trip(booking):
     if not candidate_bike:
         return Response(response='No bike around', status=404)
 
-    logger.warn('PRE PUBLISHING')
-
     socket.emit(
         'booked',
         {
             'address': booking.matched_bike_address,
             'bike_name': booking.matched_bike_name
         })
-
-    logger.info('POST PUBLISHING')
 
     if ENV != 'dev':
         book_bike(candidate_bike)
