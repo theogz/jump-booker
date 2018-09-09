@@ -193,8 +193,6 @@ def schedule_trip(booking):
 
     if not candidate_bike:
         socket.emit('booked', {
-            'address': '',
-            'bike_name': '',
             'status': 'warning'
         })
         return Response(response='No bike around', status=404)
