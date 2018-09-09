@@ -8,46 +8,56 @@ from booker.forms import (
 from flask import (
     request, Response, render_template, redirect, url_for,
     flash)
-from concurrent.futures import ThreadPoolExecutor
-
-executor = ThreadPoolExecutor(max_workers=4)
+import eventlet
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 @login_required
-def main_page():
+def index():
     form = AddressForm()
-    if form.validate_on_submit():
-        booking = create_booking(form.address.data, form.auto_book.data)
-        flash(
-            'Searching bikes around '
-            f'{booking.human_readable_address}'
-            '...',
-            'info')
-
-        res = schedule_trip(booking)
-
-        result_data = (
-            {
-                'message': (
-                    f'Found bike {booking.matched_bike_name} at '
-                    f'{booking.matched_bike_address}'),
-                'category': 'success'
-            } if res.status_code < 400
-            else ({
-                'message': 'No bike found',
-                'category': 'danger'
-                }))
-        flash(result_data['message'], result_data['category'])
-        return redirect(url_for('main_page'))
-    form.address.data = ''  # Ugly form "reset".
     return render_template('index.html', form=form)
+
+
+@app.route('/book', methods=['POST'])
+@login_required
+def book():
+    form = AddressForm()
+
+    if not form.validate_on_submit():
+        return Response('Problem with form', 403)
+
+    booking = create_booking(form.address.data, True)
+
+    eventlet.spawn(schedule_trip, booking=booking)
+
+    init_data = (
+        {
+            'message': (
+                'Searching bikes around '
+                f'{booking.human_readable_address}'
+                '...'),
+            'category': 'info'
+        } if booking.status == 'pending'
+        else ({
+            'message': 'Google address API limit exceeded',
+            'category': 'warning'
+        }))
+    flash(init_data['message'], init_data['category'])
+
+    return redirect(url_for('booking_id', id=booking.id))
+
+
+@app.route('/booking/<id>', methods=['GET', 'PUT'])
+@login_required
+def booking_id(id):
+    booking = db.session.query(Bookings).get(id)
+    return render_template('booking.html', booking=booking)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main_page'))
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.filter_by(email=form.email.data).first()
@@ -60,7 +70,7 @@ def login():
             next_page = request.args.get('next')
             return (
                 redirect(next_page) if next_page
-                else (url_for('main_page')))
+                else (url_for('index')))
         flash(
             'Login Unsuccessful. Please check username and password',
             'danger')
@@ -70,7 +80,7 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('main_page'))
+        return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
         hashed_pw = (
@@ -121,7 +131,7 @@ def bookings(username):
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('main_page'))
+    return redirect(url_for('index'))
 
 
 @app.route('/authorized')

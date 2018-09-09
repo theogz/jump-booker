@@ -1,4 +1,4 @@
-from booker import app
+from booker import app, socket
 
 if __name__ == '__main__':
-    app.run(host='localhost', port='4999')
+    socket.run(app, host='localhost', port='4999')

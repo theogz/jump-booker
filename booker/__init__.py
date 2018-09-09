@@ -1,11 +1,14 @@
+import eventlet
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
+from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import os
 import pytz
 from datetime import datetime
+eventlet.monkey_patch()
 
 # Environment variables
 dotenv_path = os.path.join(os.path.dirname(__file__), './.env')
@@ -14,6 +17,7 @@ SECRET_KEY = os.getenv('FLASK_SECRET')
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.templates_auto_reload = True
 
 
@@ -51,6 +55,6 @@ login_manager.login_message_category = 'info'
 # Database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'
 db = SQLAlchemy(app)
-
+socket = SocketIO(app)
 
 from booker import routes  # noqa

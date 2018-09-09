@@ -7,7 +7,7 @@ import pprint
 from custom_logger import logger
 from flask import Response
 from flask_login import current_user
-from booker import db
+from booker import db, socket
 from booker.models import Bookings
 
 # Environment variables.
@@ -21,14 +21,15 @@ HEADERS = {
 }
 pp = pprint.PrettyPrinter(indent=4).pprint
 ENV = os.getenv('ENV')
-
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 # We retry 30 times (aka 15 minutes).
 MAX_ATTEMPTS = 3
 
 
-def create_booking(raw_query, auto_book):
+def create_booking(raw_query, auto_book=True):
     g = geocoder.google(
-        f'{raw_query} San Francisco'
+        f'{raw_query} San Francisco',
+        key=GOOGLE_API_KEY
     )
 
     booking = Bookings(
@@ -107,11 +108,12 @@ def find_best_bike(booking, attempt):
     if not valid_bike_list:
         if attempt >= MAX_ATTEMPTS:
             logger.warn(f'No bikes found after {attempt} attempts')
-            booking.status = 'timeout'
+            booking.status = 'not found'
+            db.session.add(booking)
             db.session.commit()
             return False
         logger.warn('No bikes found nearby yet.')
-        sleep(2)
+        sleep(4)
         return find_best_bike(booking, attempt + 1)
 
     logger.info(
@@ -125,6 +127,7 @@ def find_best_bike(booking, attempt):
     booking.matched_bike_name = best_bike['name']
     booking.status = 'match found'
 
+    db.session.add(booking)
     db.session.commit()
 
     return best_bike
@@ -181,6 +184,7 @@ def cancel_rental():
 
 
 def schedule_trip(booking):
+
     # Todo: handle auto-booking
     if booking.status == 'error':
         return Response(response='Error', status=429)
@@ -191,11 +195,24 @@ def schedule_trip(booking):
     candidate_bike = find_best_bike(booking, attempt=1)
 
     if not candidate_bike:
+        socket.emit('booked', {
+            'status': 'warning'
+        }, namespace=f'/booking_{booking.id}')
         return Response(response='No bike around', status=404)
+
+    socket.emit(
+        'booked',
+        {
+            'address': booking.matched_bike_address,
+            'bike_name': booking.matched_bike_name,
+            'status': 'success'
+        },
+        namespace=f'/booking_{booking.id}')
 
     if ENV != 'dev':
         book_bike(candidate_bike)
-        booking.status = 'completed'
+        booking.status = 'booked'
+        db.session.add(booking)
         db.session.commit()
         return Response(response='Booked', status=200)
 

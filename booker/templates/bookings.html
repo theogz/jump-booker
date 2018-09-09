@@ -11,12 +11,13 @@
     </thead>
     <tbody>
       {% for booking in bookings.items %}
-      <tr class="table-{{ 'success' if booking.status == 'completed' else
+      <tr class="table-{{ 'success' if booking.status == 'booked' else
       'secondary' if booking.status == 'cancelled' else
       'danger' if booking.status == 'error' else
-      'warning' if booking.status == 'timeout' else
+      'warning' if booking.status == 'not found' else
       'info' if booking.status == 'match found' else
-      'default'}}">
+      'default'}}" onclick="window.location.href='{{ url_for('booking_id',id=booking.id) }}'"
+      style="cursor:pointer;">
         <th scope="row">{{ booking.created_at | datetimefilter }}</th>
         <td>{{ booking.human_readable_address }}</td>
         <td>{{ booking.matched_bike_address if booking.matched_bike_address else '' }}</td>
