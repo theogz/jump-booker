@@ -1,9 +1,12 @@
 {% extends "layout.html" %}
 {% block content %}
 <div id="js_alert_placeholder"></div>
+<div>
+  🚧 Soon: cancel rental and more
+</div>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
 <script>
-  var socket = io.connect('http://' + document.domain + ':' + location.port + '/booking_{{ booking.id }}');
+  var socket = io.connect(`http://${document.domain}:${location.port}/booking_{{ booking.id }}`);
   function showalert(alerttype, address, id) {
     var banner_content = alerttype === 'success'
       ? `Found bike #${id} at ${address} - <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address.trim())}">View directions</a>`
