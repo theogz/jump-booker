@@ -16,7 +16,8 @@
       'danger' if booking.status == 'error' else
       'warning' if booking.status == 'timeout' else
       'info' if booking.status == 'match found' else
-      'default'}}">
+      'default'}}" onclick="window.location.href='{{ url_for('booking_id',id=booking.id) }}'"
+      style="cursor:pointer;">
         <th scope="row">{{ booking.created_at | datetimefilter }}</th>
         <td>{{ booking.human_readable_address }}</td>
         <td>{{ booking.matched_bike_address if booking.matched_bike_address else '' }}</td>

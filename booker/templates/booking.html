@@ -6,7 +6,7 @@
   var socket = io.connect('http://' + document.domain + ':' + location.port);
   function showalert(alerttype, address, id) {
     var banner_content = alerttype === 'success'
-      ? `Found bike #${id} at ${address} - <a href=https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address.trim())}>View directions</a>`
+      ? `Found bike #${id} at ${address} - <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address.trim())}">View directions</a>`
       : 'No bike found :(';
     $('#js_alert_placeholder').append(`<div id="alertdiv" class="alert alert-${alerttype}"><button type="button" class="close" data-dismiss="alert">&times;</button><span>${banner_content}</span></div>`)
   };
