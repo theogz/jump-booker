@@ -54,6 +54,6 @@ login_manager.login_message_category = 'info'
 # Database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'
 db = SQLAlchemy(app)
-socket = SocketIO(app, logger=True, engineio_logger=True)
+socket = SocketIO(app)
 
 from booker import routes  # noqa
