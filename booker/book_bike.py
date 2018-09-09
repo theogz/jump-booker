@@ -192,13 +192,19 @@ def schedule_trip(booking):
     candidate_bike = find_best_bike(booking, attempt=1)
 
     if not candidate_bike:
+        socket.emit('booked', {
+            'address': '',
+            'bike_name': '',
+            'status': 'warning'
+        })
         return Response(response='No bike around', status=404)
 
     socket.emit(
         'booked',
         {
             'address': booking.matched_bike_address,
-            'bike_name': booking.matched_bike_name
+            'bike_name': booking.matched_bike_name,
+            'status': 'success'
         })
 
     if ENV != 'dev':
