@@ -24,7 +24,7 @@ def book():
     form = AddressForm()
 
     if not form.validate_on_submit():
-        return Response('no', 403)
+        return Response('Problem with form', 403)
 
     booking = create_booking(form.address.data, True)
 
