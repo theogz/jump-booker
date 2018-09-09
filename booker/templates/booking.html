@@ -7,12 +7,11 @@
   socket.on('connect', function () {
   socket.emit('my event', {data: 'wub wub'});
   });
-  function showalert(message, alerttype) {
-    $('#js_alert_placeholder').append('<div id="alertdiv" class="alert alert-' + alerttype + '"><button type="button" class="close" data-dismiss="alert">&times;</button><span>' + message + '</span></div>')
+  function showalert(address, id, alerttype) {
+    $('#js_alert_placeholder').append('<div id="alertdiv" class="alert alert-' + alerttype + '"><button type="button" class="close" data-dismiss="alert">&times;</button><span><a href=https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address.trim()) + '>' + `Found bike (${id}) at ${address}` + '</a></span></div>')
   };
   socket.on('booked', function (data) {
-    console.log(`EVENT WAS RECEIVED: ${data.matched_bike_address}!!!!!!!!!!`);
-    showalert(`Found bike (${data.bike_name}) at ${data.address}`, 'success')
+    showalert(data.address, data.bike_name, 'success')
   });
 </script>
 {% endblock content %}
