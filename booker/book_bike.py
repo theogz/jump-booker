@@ -108,7 +108,8 @@ def find_best_bike(booking, attempt):
     if not valid_bike_list:
         if attempt >= MAX_ATTEMPTS:
             logger.warn(f'No bikes found after {attempt} attempts')
-            booking.status = 'timeout'
+            booking.status = 'not found'
+            db.session.add(booking)
             db.session.commit()
             return False
         logger.warn('No bikes found nearby yet.')
@@ -126,6 +127,7 @@ def find_best_bike(booking, attempt):
     booking.matched_bike_name = best_bike['name']
     booking.status = 'match found'
 
+    db.session.add(booking)
     db.session.commit()
 
     return best_bike
@@ -182,6 +184,7 @@ def cancel_rental():
 
 
 def schedule_trip(booking):
+
     # Todo: handle auto-booking
     if booking.status == 'error':
         return Response(response='Error', status=429)
@@ -208,6 +211,7 @@ def schedule_trip(booking):
     if ENV != 'dev':
         book_bike(candidate_bike)
         booking.status = 'completed'
+        db.session.add(booking)
         db.session.commit()
         return Response(response='Booked', status=200)
 
