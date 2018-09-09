@@ -113,7 +113,7 @@ def find_best_bike(booking, attempt):
             db.session.commit()
             return False
         logger.warn('No bikes found nearby yet.')
-        sleep(2)
+        sleep(4)
         return find_best_bike(booking, attempt + 1)
 
     logger.info(
@@ -197,7 +197,7 @@ def schedule_trip(booking):
     if not candidate_bike:
         socket.emit('booked', {
             'status': 'warning'
-        })
+        }, namespace=f'/booking_{booking.id}')
         return Response(response='No bike around', status=404)
 
     socket.emit(
@@ -206,11 +206,12 @@ def schedule_trip(booking):
             'address': booking.matched_bike_address,
             'bike_name': booking.matched_bike_name,
             'status': 'success'
-        })
+        },
+        namespace=f'/booking_{booking.id}')
 
     if ENV != 'dev':
         book_bike(candidate_bike)
-        booking.status = 'completed'
+        booking.status = 'booked'
         db.session.add(booking)
         db.session.commit()
         return Response(response='Booked', status=200)
