@@ -175,7 +175,7 @@ def cancel_rental():
         if r.status_code >= 200 and r.status_code < 400:
             logger.info(f'Succesfully cancelled rental.')
             return {
-                'message': 'Successfully cancelled',
+                'message': 'Successfully cancelled rental!',
                 'category': 'success'
             }
         else:
