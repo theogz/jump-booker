@@ -50,7 +50,8 @@ app.jinja_env.filters['datetimefilter'] = datetimefilter
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-login_manager.login_message_category = 'info'
+login_manager.login_message_category = 'warning'
+login_manager.login_message = 'Signup is disabled at this time'
 
 # Database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'
