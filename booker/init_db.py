@@ -16,7 +16,7 @@ def remake_db():
 
     first_admin = Users(
         username='admin',
-        email='a@b.com',
+        email=os.getenv('ADMIN_EMAIL'),
         password=(
             bcrypt
             .generate_password_hash(os.getenv('ADMIN_PW')).decode('utf-8')),
