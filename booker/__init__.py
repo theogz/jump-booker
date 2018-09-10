@@ -56,6 +56,8 @@ login_manager.login_message = 'Signup is disabled at this time'
 # Database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'
 db = SQLAlchemy(app)
+
+# SocketIO
 socket = SocketIO(app)
 
 from booker import routes  # noqa
