@@ -1,7 +1,7 @@
 from booker import app, db, bcrypt
 from flask_login import login_user, logout_user, current_user, login_required
 from booker.models import Users, Bookings
-from booker.book_bike import create_booking, schedule_trip
+from booker.book_bike import create_booking, schedule_trip, cancel_rental
 from booker.init_db import remake_db
 from booker.forms import (
     AddressForm, LoginForm, RegistrationForm, UpdateAccountForm)
@@ -78,6 +78,7 @@ def login():
 
 
 @app.route('/register', methods=['GET', 'POST'])
+@login_required
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -126,6 +127,14 @@ def bookings(username):
         .order_by(Bookings.created_at.desc())
         .paginate(page=page, per_page=10))
     return render_template('bookings.html', bookings=booking_list)
+
+
+@app.route('/cancel', methods=['GET'])
+@login_required
+def cancel():
+    is_cancelled = cancel_rental()
+    flash(is_cancelled['message'], is_cancelled['category'])
+    return redirect(url_for('index'))
 
 
 @app.route('/logout')

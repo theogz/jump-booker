@@ -1,6 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
+import json
 import geocoder
 from time import sleep
 import pprint
@@ -166,21 +167,31 @@ def cancel_rental():
 
     try:
         cancel_url = f'{BASE_URL}/rentals/cancel.json'
+        logger.info(f'POST - {cancel_url}')
         r = requests.delete(
             cancel_url,
             headers=HEADERS
         )
         if r.status_code >= 200 and r.status_code < 400:
             logger.info(f'Succesfully cancelled rental.')
-            return True
+            return {
+                'message': 'Successfully cancelled rental!',
+                'category': 'success'
+            }
         else:
             logger.error(
-                f'{r.status_code} - {r.text}'
+                f'{r.status_code} - {json.loads(r.text)}'
             )
-            return False
+            return {
+                'message': json.loads(r.text).get('error'),
+                'category': 'info'
+                }
     except Exception as e:
         logger.exception(e)
-    return False
+    return {
+        'message': 'Internal error',
+        'category': 'error'
+    }
 
 
 def schedule_trip(booking):

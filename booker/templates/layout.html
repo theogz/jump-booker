@@ -27,6 +27,7 @@
               <a class="nav-item nav-link" href="/">Home</a>
               {% if current_user.is_authenticated %}
                 <a class="nav-item nav-link" href="{{ url_for('bookings', username=current_user.username) }}">Bookings</a>
+                <a class="nav-item nav-link" href="{{ url_for('cancel') }}">Cancel subscription</a>
               {% endif %}
             </div>
             <!-- Navbar Right Side -->
