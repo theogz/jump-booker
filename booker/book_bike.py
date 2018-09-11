@@ -8,6 +8,8 @@ import pprint
 from custom_logger import logger
 from flask import Response
 from flask_login import current_user
+import sendgrid
+from sendgrid.helpers.mail import Email, Content, Mail
 from booker import db, socket
 from booker.models import Bookings
 
@@ -24,6 +26,21 @@ pp = pprint.PrettyPrinter(indent=4).pprint
 ENV = os.getenv('ENV')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 MAX_ATTEMPTS = 10
+sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
+
+
+def send_email(booking, email_address):
+    from_email = Email(os.getenv('SENDGRID_DEFAULT_SENDER'))
+    to_email = Email(email_address)
+    subject = (
+        f'Found bike {booking.matched_bike_name} '
+        f'at {booking.human_readable_address}'
+    ) if booking.status == 'match found' else (
+        'No bike found for the requested address.'
+    )
+    content = Content('text/plain', ' ')
+    mail = Mail(from_email, subject, to_email, content)
+    return sg.client.mail.send.post(request_body=mail.get())
 
 
 def create_booking(raw_query, auto_book=True):
@@ -193,7 +210,7 @@ def cancel_rental():
     }
 
 
-def schedule_trip(booking):
+def schedule_trip(booking, email):
 
     # Todo: handle auto-booking
     if booking.status == 'error':
@@ -203,6 +220,12 @@ def schedule_trip(booking):
         f'Searching bikes around {booking.human_readable_address}')
 
     candidate_bike = find_best_bike(booking, attempt=1)
+
+    email_response = send_email(booking, email)
+    if email_response.status_code < 400:
+        logger.info('Email successfully sent')
+    else:
+        logger.warn(f'Email not sent (status {email_response.status_code}')
 
     if not candidate_bike:
         socket.emit('booked', {
