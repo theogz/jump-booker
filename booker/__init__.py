@@ -54,7 +54,7 @@ login_manager.login_message_category = 'warning'
 login_manager.login_message = 'Signup is disabled at this time'
 
 # Database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dev.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 db = SQLAlchemy(app)
 socket = SocketIO(app)
 
