@@ -23,8 +23,7 @@ HEADERS = {
 pp = pprint.PrettyPrinter(indent=4).pprint
 ENV = os.getenv('ENV')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-# We retry 30 times (aka 15 minutes).
-MAX_ATTEMPTS = 3
+MAX_ATTEMPTS = 10
 
 
 def create_booking(raw_query, auto_book=True):
@@ -114,7 +113,7 @@ def find_best_bike(booking, attempt):
             db.session.commit()
             return False
         logger.warn('No bikes found nearby yet.')
-        sleep(4)
+        sleep(30)
         return find_best_bike(booking, attempt + 1)
 
     logger.info(
