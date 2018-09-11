@@ -46,3 +46,7 @@ def remake_db():
     db.session.add(mock_booking_2)
     db.session.commit()
     logger.info('Succesfully recreated the database.')
+
+
+if __name__ == '__main__':
+    remake_db()
