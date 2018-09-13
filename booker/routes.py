@@ -28,7 +28,8 @@ def book():
 
     booking = create_booking(form.address.data, True)
 
-    eventlet.spawn(schedule_trip, booking=booking, email=current_user.email)
+    eventlet.spawn(
+        schedule_trip, booking_id=booking.id, email=current_user.email)
 
     init_data = (
         {

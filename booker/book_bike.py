@@ -210,7 +210,8 @@ def cancel_rental():
     }
 
 
-def schedule_trip(booking, email):
+def schedule_trip(booking_id, email):
+    booking = db.session.query(Bookings).get(booking_id)
 
     # Todo: handle auto-booking
     if booking.status == 'error':
