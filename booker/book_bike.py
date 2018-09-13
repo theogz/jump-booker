@@ -195,7 +195,7 @@ def cancel_rental():
                 'category': 'success'
             }
         else:
-            logger.error(
+            logger.warn(
                 f'{r.status_code} - {json.loads(r.text)}'
             )
             return {
