@@ -25,7 +25,8 @@ HEADERS = {
 pp = pprint.PrettyPrinter(indent=4).pprint
 ENV = os.getenv('ENV')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-MAX_ATTEMPTS = 10
+MAX_ATTEMPTS = 10 if ENV != 'dev' else 3
+RETRY_DELAY = 30 if ENV != 'dev' else 3
 sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
 
 
@@ -130,7 +131,7 @@ def find_best_bike(booking, attempt):
             db.session.commit()
             return False
         logger.warn('No bikes found nearby yet.')
-        sleep(30)
+        sleep(RETRY_DELAY)
         return find_best_bike(booking, attempt + 1)
 
     logger.info(
