@@ -40,7 +40,7 @@ def book():
             'category': 'info'
         } if booking.status == 'pending'
         else ({
-            'message': 'Google address API limit exceeded',
+            'message': 'Error with Google Maps API',
             'category': 'warning'
         }))
     flash(init_data['message'], init_data['category'])

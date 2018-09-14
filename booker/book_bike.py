@@ -56,7 +56,7 @@ def create_booking(raw_query, auto_book=True):
         auto_book=auto_book
     )
 
-    if g.status == 'OVER_QUERY_LIMIT':
+    if g.status == 'OVER_QUERY_LIMIT' or g.status_code == 'Unknown':
         booking.status = 'error'
         db.session.add(booking)
         db.session.commit()

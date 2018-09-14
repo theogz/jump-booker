@@ -19,7 +19,7 @@
       'default'}}" onclick="window.location.href='{{ url_for('booking_id',id=booking.id) }}'"
       style="cursor:pointer;">
         <th scope="row">{{ booking.created_at | datetimefilter }}</th>
-        <td>{{ booking.human_readable_address }}</td>
+        <td>{{ booking.human_readable_address if booking.human_readable_address else '' }}</td>
         <td>{{ booking.matched_bike_address if booking.matched_bike_address else '' }}</td>
         <td>{{ booking.status }}</td>
       </tr>
