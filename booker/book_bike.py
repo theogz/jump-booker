@@ -3,7 +3,6 @@ import os
 from dotenv import load_dotenv
 import json
 import geocoder
-from time import sleep
 import pprint
 from custom_logger import logger
 from flask import Response
@@ -131,7 +130,7 @@ def find_best_bike(booking, attempt):
             db.session.commit()
             return False
         logger.warn('No bikes found nearby yet.')
-        sleep(RETRY_DELAY)
+        socket.sleep(RETRY_DELAY)
         return find_best_bike(booking, attempt + 1)
 
     logger.info(
